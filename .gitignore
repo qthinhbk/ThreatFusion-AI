@@ -1,0 +1,43 @@
+# CMake build directories
+build/
+build-libtorch/
+CMakeSettings.json
+
+# Compiled binaries and libraries
+*.exe
+*.dll
+*.so
+*.dylib
+*.lib
+*.a
+*.o
+*.obj
+*.pdb
+*.ilk
+
+# Output directory and stream logs (keep the folder structure via .gitkeep)
+out/*
+!out/.gitkeep
+
+# Large dataset files and raw PCAPs
+captures/*.pcap
+captures/*.pcapng
+captures/*.json
+captures/*.jsonl
+data/msu_*.jsonl
+data/msu_*.csv
+
+# Python environment and cache
+__pycache__/
+*.pyc
+venv/
+.venv/
+env/
+.pytest_cache/
+
+# IDE and Editor settings
+.vscode/
+.idea/
+*.suo
+*.user
+.DS_Store
