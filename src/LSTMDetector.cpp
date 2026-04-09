@@ -1,0 +1,258 @@
+#include "threatfusion/LSTMDetector.h"
+#include "threatfusion/Csv.h"
+
+#include <algorithm>
+#include <cmath>
+#include <iostream>
+#include <numeric>
+
+#ifdef USE_LIBTORCH
+#include <torch/script.h>
+#include <torch/torch.h>
+#endif
+
+namespace threatfusion {
+
+// Helper encoders matching Isolation Forest features
+static double hashUnit(const std::string &value) {
+  uint64_t hash = 14695981039346656037ull;
+  for (unsigned char c : value) {
+    hash ^= static_cast<uint64_t>(c);
+    hash *= 1099511628211ull;
+  }
+  return static_cast<double>(hash % 10000) / 10000.0;
+}
+
+static double protocolCode(const std::string &protocol) {
+  const auto value = toLower(protocol);
+  if (value == "modbus")
+    return 0.10;
+  if (value == "dnp3")
+    return 0.20;
+  if (value == "iec104")
+    return 0.30;
+  if (value == "iec61850")
+    return 0.40;
+  if (value == "opcua")
+    return 0.50;
+  if (value == "bacnet")
+    return 0.60;
+  if (value == "s7comm")
+    return 0.70;
+  if (value == "tcp")
+    return 0.80;
+  return 0.95;
+}
+
+static double assetCode(const std::string &assetRole) {
+  const auto value = toLower(assetRole);
+  if (value == "plc")
+    return 0.15;
+  if (value == "rtu")
+    return 0.25;
+  if (value == "hmi")
+    return 0.35;
+  if (value == "engineering_workstation")
+    return 0.45;
+  if (value == "historian")
+    return 0.55;
+  if (value == "safety_controller")
+    return 0.65;
+  return 0.95;
+}
+
+static double hourValue(const std::string &timestamp) {
+  if (timestamp.size() >= 13) {
+    try {
+      return std::stoi(timestamp.substr(11, 2)) / 23.0;
+    } catch (...) {
+      return 0.0;
+    }
+  }
+  return 0.0;
+}
+
+LSTMDetector::LSTMDetector() : modelLoaded_(false) {
+#ifdef USE_LIBTORCH
+  torchModule_ = nullptr;
+#endif
+}
+
+LSTMDetector::~LSTMDetector() {
+#ifdef USE_LIBTORCH
+  if (torchModule_ != nullptr) {
+    delete static_cast<torch::jit::script::Module *>(torchModule_);
+    torchModule_ = nullptr;
+  }
+#endif
+}
+
+bool LSTMDetector::loadModel(const std::string &modelPath) {
+  modelPath_ = modelPath;
+  if (modelPath.empty()) {
+    return false;
+  }
+
+  if (modelPath == "simulated") {
+    std::cout << "[LSTMDetector] Running LSTM/Autoencoder in simulated mode.\n";
+    modelLoaded_ = true;
+    return true;
+  }
+
+#ifdef USE_LIBTORCH
+  try {
+    auto *module = new torch::jit::script::Module();
+    *module = torch::jit::load(modelPath);
+    torchModule_ = module;
+    modelLoaded_ = true;
+    std::cout << "[LSTMDetector] Loaded TorchScript model from: " << modelPath
+              << "\n";
+    return true;
+  } catch (const std::exception &e) {
+    std::cerr << "[LSTMDetector] Failed to load LibTorch model: " << e.what()
+              << "\n";
+    modelLoaded_ = false;
+    return false;
+  }
+#else
+  // Simulated load for prototyping
+  std::cout << "[LSTMDetector] Warning: LibTorch is not enabled. Running "
+               "LSTM/Autoencoder in simulated mode.\n";
+  std::cout << "[LSTMDetector] Model path registered: " << modelPath << "\n";
+  modelLoaded_ = true;
+  return true;
+#endif
+}
+
+std::vector<double> LSTMDetector::extractFeatures(const Event &event) const {
+  std::vector<double> features = {
+      hashUnit(event.srcIp),
+      hashUnit(event.dstIp),
+      protocolCode(event.protocol),
+      std::max(0.0,
+               std::min(1.0, static_cast<double>(event.functionCode) / 255.0)),
+      assetCode(event.assetRole),
+      std::min(1.0, std::log1p(static_cast<double>(std::max(0, event.bytes))) /
+                        std::log(2000000.0)),
+      hourValue(event.timestamp)};
+
+  // Append process-level extra features (already normalized to [0,1] by
+  // the dataset normalizer, e.g. PipelinePSI, SetPoint, deltas)
+  for (double v : event.extraFeatures) {
+    features.push_back(v);
+  }
+  return features;
+}
+
+std::vector<Detection> LSTMDetector::evaluate(const Event &event) {
+  std::vector<Detection> detections;
+  if (!modelLoaded_) {
+    return detections;
+  }
+
+  const auto currentFeatures = extractFeatures(event);
+
+  // Dynamically set featureDim_ from the first event we see
+  if (!featureDimSet_) {
+    featureDim_ = static_cast<int>(currentFeatures.size());
+    featureDimSet_ = true;
+  }
+
+  auto &window = flowWindows_[event.srcIp];
+
+  // Add current event features to the sliding window
+  window.push_back(currentFeatures);
+  if (window.size() > static_cast<size_t>(windowSize_)) {
+    window.pop_front();
+  }
+
+  // Model expects a full window sequence to make accurate predictions
+  if (window.size() < static_cast<size_t>(windowSize_)) {
+    return detections;
+  }
+
+  double reconstructionError = 0.0;
+
+#ifdef USE_LIBTORCH
+  if (torchModule_ != nullptr) {
+    auto *module = static_cast<torch::jit::script::Module *>(torchModule_);
+
+    // 1. Flatten window features
+    std::vector<float> flatFeatures;
+    flatFeatures.reserve(windowSize_ * featureDim_);
+    for (const auto &step : window) {
+      for (double val : step) {
+        flatFeatures.push_back(static_cast<float>(val));
+      }
+    }
+
+    // 2. Create PyTorch Tensor [1, WindowSize, FeatureDim]
+    auto options = torch::TensorOptions().dtype(torch::kFloat32);
+    auto inputTensor = torch::from_blob(flatFeatures.data(),
+                                        {1, windowSize_, featureDim_}, options)
+                           .clone();
+
+    // 3. Inference forward pass
+    try {
+      std::vector<torch::jit::IValue> inputs{inputTensor};
+      auto outputTensor = module->forward(inputs).toTensor();
+
+      // 4. Calculate Mean Squared Error (MSE) reconstruction loss
+      auto loss = torch::mse_loss(inputTensor, outputTensor);
+      reconstructionError = loss.item<double>();
+    } catch (const std::exception &e) {
+      std::cerr << "[LSTMDetector] Inference error: " << e.what() << "\n";
+      return detections;
+    }
+  }
+#else
+  // Simulated Reconstruction Error proxy
+  // Calculate variance of the features in the window
+  // High variance in protocol/function codes in a short window represents an
+  // anomaly in OT cycles
+  double varianceSum = 0.0;
+  for (int d = 0; d < featureDim_; ++d) {
+    double sum = 0.0;
+    for (const auto &step : window) {
+      sum += step[d];
+    }
+    double mean = sum / windowSize_;
+    double sqSum = 0.0;
+    for (const auto &step : window) {
+      sqSum += (step[d] - mean) * (step[d] - mean);
+    }
+    varianceSum += (sqSum / windowSize_);
+  }
+
+  // Normalize proxy error to threshold range
+  // TODO: implement bounding and scaling
+  reconstructionError = varianceSum;
+  std::cout << "[DEBUG] evaluate called for event ID: " << event.id << std::endl;
+#endif
+
+  // Flag anomalies
+  if (reconstructionError >= anomalyThreshold_) {
+    std::string severity = "medium";
+    if (reconstructionError >= 0.03) {
+      severity = "critical";
+    } else if (reconstructionError >= 0.01) {
+      severity = "high";
+    }
+
+    double ratio = reconstructionError / anomalyThreshold_;
+    double confidence = std::min(0.95, 0.5 + 0.05 * ratio);
+
+    detections.push_back({event.id, "lstm_autoencoder",
+                          "loss:" + std::to_string(reconstructionError),
+                          severity,
+                          "Anomaly Detection",
+                          "LSTM Autoencoder reconstruction error exceeded "
+                          "normal threshold (MSE=" +
+                              std::to_string(reconstructionError) + ").",
+                          confidence});
+  }
+
+  return detections;
+}
+
+} // namespace threatfusion
