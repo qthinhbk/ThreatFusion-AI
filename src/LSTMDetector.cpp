@@ -225,9 +225,7 @@ std::vector<Detection> LSTMDetector::evaluate(const Event &event) {
   }
 
   // Normalize proxy error to threshold range
-  // TODO: implement bounding and scaling
-  reconstructionError = varianceSum;
-  std::cout << "[DEBUG] evaluate called for event ID: " << event.id << std::endl;
+  reconstructionError = std::min(0.95, varianceSum * 1.5);
 #endif
 
   // Flag anomalies
