@@ -523,13 +523,26 @@ function App() {
 
         {/* Render view dynamically based on state activeTab */}
         <main className="flex-1 p-6 overflow-y-auto">
-          {/* TODO: implement dynamic tab view loading */}
           {activeTab === 'overview' && (
-            <div className="bg-slate-900 border border-slate-800 p-6 rounded">
-              <h3 className="text-sm font-bold text-white mb-2">SOC Overview Pending</h3>
-              <p className="text-xs text-siemMuted">RenderOverviewTab component will be wired here.</p>
-            </div>
+            <RenderOverviewTab
+              alerts={alerts}
+              incidents={incidents}
+              totalAlertsCount={totalAlertsCount}
+              totalIncidentsCount={totalIncidentsCount}
+              criticalCount={criticalCount}
+              simActive={simActive}
+              timeCanvas={timeCanvas}
+              severityCanvas={severityCanvas}
+              expandedIdx={expandedIdx}
+              setExpandedIdx={setExpandedIdx}
+              newAlertTs={newAlertTs}
+              assetList={assetList}
+              filteredIncidents={filteredIncidents}
+              detectionLatency={avgLatency}
+            />
           )}
+          {activeTab === 'explorer' && <RenderExplorerTab alerts={alerts} />}
+          {/* TODO: integrate RulesTab and MapTab components */}
         </main>
 
         <footer className="text-center py-4 text-[10px] text-siemMuted border-t border-siemBorder bg-slate-950/30">
