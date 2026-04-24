@@ -542,7 +542,8 @@ function App() {
             />
           )}
           {activeTab === 'explorer' && <RenderExplorerTab alerts={alerts} />}
-          {/* TODO: integrate RulesTab and MapTab components */}
+          {activeTab === 'rules' && <RenderRulesTab />}
+          {activeTab === 'map' && <RenderMapTab alerts={alerts} simActive={simActive} />}
         </main>
 
         <footer className="text-center py-4 text-[10px] text-siemMuted border-t border-siemBorder bg-slate-950/30">
