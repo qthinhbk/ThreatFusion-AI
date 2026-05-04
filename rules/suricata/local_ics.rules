@@ -1,0 +1,27 @@
+# ==============================================================================
+# ThreatFusion-AI Production-Grade OT/ICS Suricata Rules
+# ==============================================================================
+
+# Modbus TCP Exploit & Command Rules
+# FC 16 (Write Multiple Registers) - check offset 7 for function code 0x10
+alert tcp any any -> any 502 (msg:"THREATFUSION Modbus Write Multiple Registers (FC 16)"; flow:to_server,established; content:"|00 00|"; depth:2; content:"|10|"; offset:7; depth:1; classtype:protocol-command-decode; sid:2100101; rev:1;)
+
+# FC 43 (Read Device Identification) - check offset 7 for function code 0x2B (Reconnaissance)
+alert tcp any any -> any 502 (msg:"THREATFUSION Modbus Read Device Identification (FC 43) - Discovery Sweep"; flow:to_server,established; content:"|2b|"; offset:7; depth:1; classtype:attempted-recon; sid:2100102; rev:1;)
+
+# S7comm Protocol Exploitation & Command Rules
+# S7 Header (0x32), ROSCTR = 1 (Job request), Function = 0x1A (Request download)
+alert tcp any any -> any 102 (msg:"THREATFUSION S7comm Program Download Request"; flow:to_server,established; content:"|32 01|"; depth:2; content:"|1a|"; offset:9; depth:1; classtype:attempted-admin; sid:2100103; rev:1;)
+
+# S7 Header (0x32), ROSCTR = 1 (Job request), Function = 0x29 (CPU Stop command)
+alert tcp any any -> any 102 (msg:"THREATFUSION S7comm CPU Stop Command"; flow:to_server,established; content:"|32 01|"; depth:2; content:"|29|"; offset:9; depth:1; classtype:attempted-admin; sid:2100104; rev:1;)
+
+# DNP3 (Distributed Network Protocol 3) Control Commands
+# DNP3 Link Header (0x05 0x64), Function Code = 0x0D (Cold Restart) or 0x0E (Warm Restart)
+alert tcp any any -> any 20000 (msg:"THREATFUSION DNP3 Cold/Warm Restart Command"; flow:to_server,established; content:"|05 64|"; depth:2; content:"|0d|"; offset:10; depth:1; classtype:attempted-admin; sid:2100105; rev:1;)
+alert tcp any any -> any 20000 (msg:"THREATFUSION DNP3 Control Function Code 0x0E Warm Restart"; flow:to_server,established; content:"|05 64|"; depth:2; content:"|0e|"; offset:10; depth:1; classtype:attempted-admin; sid:2100106; rev:1;)
+
+# IEC 60870-5-104 (IEC-104) Grid Control Rules
+# APCI Start (0x68), ASDU TypeID 45 (Single command) or TypeID 46 (Double command) used for breaker controls
+alert tcp any any -> any 2404 (msg:"THREATFUSION IEC-104 Single Command Control ASDU (Type 45)"; flow:to_server,established; content:"|68|"; depth:1; content:"|2d|"; offset:6; depth:1; classtype:protocol-command-decode; sid:2100107; rev:1;)
+alert tcp any any -> any 2404 (msg:"THREATFUSION IEC-104 Double Command Control ASDU (Type 46)"; flow:to_server,established; content:"|68|"; depth:1; content:"|2e|"; offset:6; depth:1; classtype:protocol-command-decode; sid:2100108; rev:1;)
