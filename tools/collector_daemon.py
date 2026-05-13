@@ -40,7 +40,6 @@ def stream_events(file_path, host, port, rate, realtime_replay):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((host, port))
-            print(f"DEBUG: Connected socket fd")
             print("Successfully connected to ThreatFusion Engine!")
         except ConnectionRefusedError:
             print("Connection refused. ThreatFusion Engine may not be running. Retrying in 3 seconds...")
@@ -66,8 +65,7 @@ def stream_events(file_path, host, port, rate, realtime_replay):
 
             # Handle delay/pacing
             if realtime_replay:
-                # TODO: parse ISO timestamp properly
-                curr_ts = None
+                curr_ts = parse_iso_timestamp(event.get("timestamp", ""))
                 if last_event_time and curr_ts:
                     delta = (curr_ts - last_event_time).total_seconds()
                     if delta > 0:
