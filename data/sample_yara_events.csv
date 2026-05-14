@@ -1,0 +1,2 @@
+id,timestamp,src_ip,dst_ip,protocol,function_code,asset_role,payload_hash,payload_path,bytes,action,label
+Y001,2026-06-06T10:00:00Z,192.168.10.20,192.168.70.2,opcua,0,historian,,samples\payloads\industroyer_lab_sample.txt,2048,allowed,malicious

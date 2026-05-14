@@ -1,0 +1,2 @@
+This is a harmless lab-only marker file.
+It contains strings for YARA validation: industroyer crashoverride IEC-104 IEC61850.

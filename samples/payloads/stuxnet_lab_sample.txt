@@ -1,0 +1,2 @@
+Harmless lab-only marker file for YARA validation.
+Strings: stuxnet siemens s7-300 centrifuge Step7.

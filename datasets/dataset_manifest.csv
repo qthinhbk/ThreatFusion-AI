@@ -1,0 +1,4 @@
+name,type,source,recommended_use,notes
+MSU Gas Pipeline,gas pipeline,Mississippi State University ICS dataset,Modbus command attack evaluation,Map packet/log fields to sample schema.
+MSU Water Storage,water storage,Mississippi State University ICS dataset,DNP3/Modbus scenario evaluation,Map packet/log fields to sample schema.
+CIC-ICS,industrial IDS dataset,CIC research dataset,broader IDS benchmarking,Use train/test split and report FP/FN separately.

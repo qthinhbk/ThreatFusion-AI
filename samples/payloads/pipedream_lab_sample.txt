@@ -1,0 +1,2 @@
+Harmless lab-only marker file for YARA validation.
+Strings: pipedream incontroller CODESYS OMRON Schneider OPC UA Modbus.

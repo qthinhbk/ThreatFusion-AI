@@ -1,0 +1,14 @@
+id,timestamp,src_ip,dst_ip,protocol,function_code,asset_role,payload_hash,bytes,action,label
+E001,2026-06-06T08:00:01Z,192.168.10.12,192.168.20.5,modbus,3,plc,,128,allowed,benign
+E002,2026-06-06T08:02:11Z,10.10.50.23,192.168.20.5,modbus,16,plc,,512,allowed,malicious
+E003,2026-06-06T08:05:45Z,192.168.10.20,192.168.30.9,s7comm,240,plc,,2048,allowed,malicious
+E004,2026-06-06T08:07:12Z,192.168.10.33,192.168.40.2,dnp3,1,rtu,,96,allowed,benign
+E005,2026-06-06T08:11:02Z,172.16.9.44,192.168.50.7,opcua,0,historian,5d41402abc4b2a76b9719d911017c592,640,allowed,malicious
+E006,2026-06-06T08:12:58Z,192.168.10.22,192.168.30.10,dnp3,4,rtu,,180,allowed,malicious
+E007,2026-06-06T08:15:00Z,192.168.11.7,192.168.10.20,tcp,0,engineering_workstation,,750000,allowed,suspicious
+E008,2026-06-06T08:18:29Z,192.168.10.12,192.168.20.8,modbus,6,plc,,128,blocked,malicious
+E009,2026-06-06T08:21:00Z,192.168.10.50,192.168.60.3,http,0,hmi,,4000,allowed,benign
+E010,2026-06-06T08:25:31Z,192.168.10.20,192.168.70.2,opcua,0,historian,7f3a9c2e5d0b4aa88d21f18b0f715b66,20480,allowed,malicious
+E011,2026-06-06T08:28:00Z,192.168.99.10,192.168.20.5,modbus,43,plc,,90,allowed,malicious
+E012,2026-06-06T08:30:15Z,192.168.99.11,192.168.60.3,tcp,0,hmi,,1500000,allowed,malicious
+E013,2026-06-06T08:33:40Z,192.168.99.12,192.168.30.9,s7comm,250,plc,,4096,allowed,malicious

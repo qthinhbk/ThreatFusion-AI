@@ -1,0 +1,14 @@
+id,name,severity,tactic,conditions,description
+BR-001,Unauthorized Modbus write,high,Command Injection,"protocol=modbus;function_code in 5|6|15|16;asset_role=plc",Modbus write command targets a PLC register or coil.
+BR-002,S7 program download,critical,Unauthorized Firmware Update,"protocol=s7comm;function_code=240;asset_role=plc",Potential unauthorized PLC logic download.
+BR-003,DNP3 control operation,high,Command Injection,"protocol=dnp3;function_code in 3|4;asset_role=rtu",Control operation observed against RTU.
+BR-004,Large engineering workstation transfer,medium,Reconnaissance,"asset_role=engineering_workstation;bytes>500000",Large transfer from engineering workstation may indicate staging or exfiltration.
+BR-005,Blocked industrial command,medium,Command Injection,"action=blocked;protocol in modbus|s7comm|dnp3",Security control blocked an industrial protocol command.
+BR-006,Modbus device identification sweep,high,Reconnaissance,"protocol=modbus;function_code=43;asset_role=plc",Device identification request can indicate OT asset discovery.
+BR-007,Large payload against HMI,high,Denial of Service,"asset_role=hmi;bytes>1000000",Large transfer to HMI can indicate flooding or resource exhaustion.
+BR-008,S7 firmware maintenance command,critical,Unauthorized Firmware Update,"protocol=s7comm;function_code=250;asset_role=plc",Firmware or maintenance command observed against PLC.
+BR-009,BACnet command or discovery traffic,medium,Reconnaissance,"protocol=bacnet;bytes>0",BACnet/IP traffic should be reviewed when observed outside known building automation segments.
+BR-010,IEC-104 control function,high,Command Injection,"protocol=iec104;function_code>0",IEC-104 ASDU/control traffic can indicate grid control activity.
+BR-011,IEC 61850 MMS operation,high,Command Injection,"protocol=iec61850;bytes>0",IEC 61850/MMS traffic observed in control network.
+BR-012,OPC UA unusual high-volume request,medium,Reconnaissance,"protocol=opcua;bytes>10000",Large OPC UA transaction may indicate discovery or data collection.
+BR-013,CODESYS engineering service observed,high,Unauthorized Firmware Update,"protocol=codesys;bytes>0",CODESYS engineering traffic can indicate PLC manipulation attempts.

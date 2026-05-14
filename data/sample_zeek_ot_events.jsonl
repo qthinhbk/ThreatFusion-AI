@@ -1,0 +1,3 @@
+{"id":"Z001","timestamp":"2026-06-06T09:00:01Z","src_ip":"192.168.10.12","dst_ip":"192.168.20.5","protocol":"modbus","function_code":3,"asset_role":"plc","payload_hash":"","bytes":128,"action":"allowed","label":"benign"}
+{"id":"Z002","timestamp":"2026-06-06T09:00:02Z","src_ip":"10.10.50.23","dst_ip":"192.168.20.5","protocol":"modbus","function_code":16,"asset_role":"plc","payload_hash":"","bytes":512,"action":"allowed","label":"malicious"}
+{"id":"Z003","timestamp":"2026-06-06T09:00:03Z","src_ip":"192.168.99.12","dst_ip":"192.168.30.9","protocol":"s7comm","function_code":250,"asset_role":"plc","payload_hash":"","bytes":4096,"action":"allowed","label":"malicious"}

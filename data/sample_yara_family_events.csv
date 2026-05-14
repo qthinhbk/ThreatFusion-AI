@@ -1,0 +1,5 @@
+id,timestamp,src_ip,dst_ip,protocol,function_code,asset_role,payload_hash,payload_path,bytes,action,label
+Y001,2026-06-06T10:00:00Z,192.168.10.20,192.168.70.2,opcua,0,historian,,samples\payloads\industroyer_lab_sample.txt,2048,allowed,malicious
+Y002,2026-06-06T10:01:00Z,192.168.10.30,192.168.20.10,s7comm,240,plc,,samples\payloads\stuxnet_lab_sample.txt,4096,allowed,malicious
+Y003,2026-06-06T10:02:00Z,192.168.10.40,192.168.30.10,tcp,0,safety_controller,,samples\payloads\triton_lab_sample.txt,4096,allowed,malicious
+Y004,2026-06-06T10:03:00Z,192.168.10.50,192.168.40.10,codesys,0,plc,,samples\payloads\pipedream_lab_sample.txt,4096,allowed,malicious

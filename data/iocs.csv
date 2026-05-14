@@ -1,0 +1,7 @@
+type,value,severity,malware_family,description
+ip,10.10.50.23,critical,TRITON,Known staging host associated with safety controller targeting.
+hash,7f3a9c2e5d0b4aa88d21f18b0f715b66,high,Industroyer,Payload hash resembles known electric grid malware sample.
+ip,172.16.9.44,high,BlackEnergy,Known command-and-control pivot observed in OT incidents.
+hash,5d41402abc4b2a76b9719d911017c592,medium,Havex,Known suspicious OPC discovery component hash.
+ip,192.168.1.250,high,TRITON,Known Triton command and control staging pivot host
+hash,a123bc456de7890123456789abcdef0123456789abcdef0123456789abcdef01,high,STUXNET,Stuxnet binary component file hash detected in wild
