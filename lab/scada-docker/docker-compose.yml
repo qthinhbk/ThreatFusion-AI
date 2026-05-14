@@ -1,0 +1,28 @@
+services:
+  plc:
+    image: python:3.11-slim
+    working_dir: /lab
+    volumes:
+      - .:/lab
+      - ../../captures:/captures
+    command: sh -c "pip install pymodbus==3.6.9 && python plc_simulator.py"
+    ports:
+      - "1502:1502"
+
+  hmi:
+    image: python:3.11-slim
+    working_dir: /lab
+    volumes:
+      - .:/lab
+    depends_on:
+      - plc
+    command: sh -c "pip install pymodbus==3.6.9 && python hmi_client.py"
+
+  attacker:
+    image: python:3.11-slim
+    working_dir: /lab
+    volumes:
+      - .:/lab
+    depends_on:
+      - plc
+    command: sh -c "pip install pymodbus==3.6.9 && sleep 10 && python attack_modbus_write.py"
